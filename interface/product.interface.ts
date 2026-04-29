@@ -22,4 +22,6 @@ export interface Product {
   price: number;
   stock: number;
   image: string;
+  avgRating: number;
+  totalReviews: number;
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { addItem } from '@/lib/redux/features/cart.slicer';
 import { AppStore, makeStore } from '@/lib/redux/store'
 import React, { useRef } from 'react'

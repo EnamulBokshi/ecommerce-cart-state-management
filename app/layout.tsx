@@ -1,5 +1,5 @@
-import { Geist, Geist_Mono } from "next/font/google"
-
+import { Geist, Geist_Mono } from "next/font/google";
+// @ts-ignore
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils";

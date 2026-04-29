@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import cartSlice from "./features/cart.slicer";
+import productSlice from "./features/product.slicer";
 
 export const makeStore = ()=>{
     return configureStore({
     reducer: {
         cart: cartSlice,
+        product: productSlice
     }
 })
 }
