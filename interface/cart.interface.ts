@@ -4,7 +4,7 @@ export interface CartState{
 }
 
 export interface CartItem {
-    productId: number;
+    productId: string;
     name: string;
     price: number;
     quantity: number;

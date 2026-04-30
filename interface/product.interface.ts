@@ -5,16 +5,7 @@ export enum ProductStatus {
 
     DISCONTINUED = "discontinued"
 }
-export interface IProduct {
-    id: number;
-    name: string;
-    price: number;
-    description: string;
-    images: string[];
-    status: ProductStatus;
-    quantity?: number;
 
-}
 export interface Product {
   id: string;
   name: string;
