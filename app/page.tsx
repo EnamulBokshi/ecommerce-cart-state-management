@@ -1,11 +1,11 @@
 import ProductLists from "@/components/modules/product/ProductLists";
-import CartGross from "@/components/CartGross";
+import Cart from "@/components/Cart";
 
 export default function Page() {
   return (
     <div className="">
       <ProductLists />
-      <CartGross />
+      <Cart />
     </div>
   )
 }

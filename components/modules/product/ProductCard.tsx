@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Product } from "@/interface/product.interface";
 import { useAppDispatch } from "@/lib/hooks";
 import { addItem } from "@/lib/redux/features/cart.slicer";
+import { Button } from "@/components/ui/button";
+import { useStockManager } from "@/lib/helpers/stockManager";
 
 interface ProductCardProps {
   product: Product;
@@ -28,13 +30,12 @@ function StarRating({ rating }: { rating: number }) {
         return (
           <Star
             key={star}
-            className={`w-3.5 h-3.5 ${
-              filled
-                ? "fill-amber-400 text-amber-400"
-                : half
-                  ? "fill-amber-400/50 text-amber-400"
-                  : "fill-none text-gray-300"
-            }`}
+            className={`w-3.5 h-3.5 ${filled
+              ? "fill-amber-400 text-amber-400"
+              : half
+                ? "fill-amber-400/50 text-amber-400"
+                : "fill-none text-gray-300"
+              }`}
           />
         );
       })}
@@ -72,9 +73,15 @@ export default function ProductCard({
   const isOnSale = salePrice !== undefined && salePrice < product.price;
   const dispatch = useAppDispatch();
 
+  const { decreaseStock } = useStockManager();
+
+
   function handleAddToCart(e: React.MouseEvent) {
     e.stopPropagation();
     if (!isOutOfStock) {
+      if (!decreaseStock(product.id)) {
+        return;
+      }
       dispatch(
         addItem({
           productId: product.id,
@@ -102,17 +109,15 @@ export default function ProductCard({
       <div className="group flex gap-5 bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-3 hover:shadow-lg hover:border-outline-variant transition-all duration-300 cursor-pointer">
         {/* Image */}
         <div
-          className={`relative w-36 h-36 sm:w-44 sm:h-44 shrink-0 bg-surface-container overflow-hidden rounded-xl ${
-            isOutOfStock ? "opacity-70" : ""
-          }`}
+          className={`relative w-36 h-36 sm:w-44 sm:h-44 shrink-0 bg-surface-container overflow-hidden rounded-xl ${isOutOfStock ? "opacity-70" : ""
+            }`}
         >
           <Image
             src={product.image}
             alt={product.name}
             fill
-            className={`object-cover transition-transform duration-500 ${
-              isOutOfStock ? "" : "group-hover:scale-105"
-            }`}
+            className={`object-cover transition-transform duration-500 ${isOutOfStock ? "" : "group-hover:scale-105"
+              }`}
           />
           {isOutOfStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
@@ -150,9 +155,8 @@ export default function ProductCard({
             {/* Price */}
             <div>
               <p
-                className={`text-xl font-bold ${
-                  isOnSale ? "text-red-600" : "text-on-surface"
-                }`}
+                className={`text-xl font-bold ${isOnSale ? "text-red-600" : "text-on-surface"
+                  }`}
               >
                 ${(isOnSale ? salePrice! : product.price).toFixed(2)}
               </p>
@@ -165,7 +169,7 @@ export default function ProductCard({
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <button
+              {/* <button
                 aria-label={
                   wishlisted ? "Remove from wishlist" : "Add to wishlist"
                 }
@@ -179,20 +183,20 @@ export default function ProductCard({
                       : "stroke-on-surface-variant"
                   }`}
                 />
-              </button>
+              </button> */}
               {!isOutOfStock && (
-                <button
+                <Button
+                  variant={'outline'}
                   aria-label="Add to cart"
                   onClick={handleAddToCart}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
-                    addedToCart
-                      ? "bg-green-600 text-white"
-                      : "bg-primary text-on-primary hover:opacity-90"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${addedToCart
+                    ? "bg-green-600 text-white"
+                    : "backdrop-blur-sm bg-surface-container-lowest text-on-surface"
+                    }`}
                 >
                   <ShoppingCart className="w-4 h-4" />
                   {addedToCart ? "Added!" : "Add to cart"}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -206,26 +210,24 @@ export default function ProductCard({
     <div className="group cursor-pointer">
       {/* ── Image container ── */}
       <div
-        className={`relative aspect-[4/5] bg-surface-container overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl ${
-          isOutOfStock ? "opacity-70" : ""
-        }`}
+        className={`relative aspect-[4/5] bg-surface-container overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl ${isOutOfStock ? "opacity-70" : ""
+          }`}
       >
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className={`object-cover transition-transform duration-500 ${
-            isOutOfStock ? "" : "group-hover:scale-105"
-          }`}
+          className={`object-cover transition-transform duration-500 ${isOutOfStock ? "" : "group-hover:scale-105"
+            }`}
         />
 
-        {/* Gradient overlay for better text readability on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Gradient overlay for better text readability on mobile and hover */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Out-of-stock overlay */}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-            <span className="text-sm font-medium text-on-surface-variant bg-white/90 px-4 py-1.5 rounded-full shadow-sm">
+            <span className="text-sm font-medium text-gray-700 bg-white/90 px-4 py-1.5 rounded-full shadow-sm">
               Out of stock
             </span>
           </div>
@@ -242,23 +244,23 @@ export default function ProductCard({
         </div>
 
         {/* Wishlist button — top right */}
-        <button
+        {/* <button
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           onClick={handleWishlist}
-          className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-md z-10 hover:scale-110 active:scale-95"
+          className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-md z-10 text-accent-foreground hover:scale-110 active:scale-95"
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
               wishlisted
                 ? "fill-red-500 stroke-red-500"
-                : "stroke-on-surface-variant"
+                : "text-accent-foreground"
             }`}
           />
-        </button>
+        </button> */}
 
         {/* Color swatches — left side */}
         {colors && colors.length > 0 && (
-          <div className="absolute bottom-14 left-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 z-10">
+          <div className="absolute bottom-14 left-3 flex flex-col gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 translate-y-0 lg:translate-y-1 lg:group-hover:translate-y-0 z-10">
             {colors.map((color, i) => (
               <span
                 key={i}
@@ -271,21 +273,20 @@ export default function ProductCard({
 
         {/* Add to cart — bottom right */}
         {!isOutOfStock && (
-          <button
+          <Button
+            variant={'outline'}
             aria-label="Add to cart"
             onClick={handleAddToCart}
-            className={`absolute bottom-3 right-3 backdrop-blur-md p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg z-10 hover:scale-110 active:scale-95 ${
-              addedToCart
-                ? "bg-green-500 text-white"
-                : "bg-white/90"
-            }`}
+            className={`cursor-pointer absolute bottom-3 right-3 backdrop-blur-md p-3 rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 shadow-lg z-10 hover:scale-110 active:scale-95 ${addedToCart
+              ? "bg-green-500 text-white"
+              : "backdrop-blur-2xl bg-transparent border-2 border-on-surface-variant ring-offset-0 ring-1 ring-offset-background text-on-surface-variant"
+              }`}
           >
             <ShoppingCart
-              className={`w-4 h-4 ${
-                addedToCart ? "text-white" : "text-primary"
-              }`}
+              className={`w-4 h-4 ${addedToCart ? "text-white" : "text-primary"
+                }`}
             />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -310,9 +311,8 @@ export default function ProductCard({
         {/* Right: price */}
         <div className="text-right shrink-0">
           <p
-            className={`text-base font-bold ${
-              isOnSale ? "text-red-600" : "text-on-surface"
-            }`}
+            className={`text-base font-bold ${isOnSale ? "text-red-600" : "text-on-surface"
+              }`}
           >
             ${(isOnSale ? salePrice! : product.price).toFixed(2)}
           </p>

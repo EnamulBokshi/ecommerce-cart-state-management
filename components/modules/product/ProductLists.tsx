@@ -106,7 +106,7 @@ export default function ProductLists() {
                 onClick={() => setViewMode("grid")}
                 className={`p-2 rounded-md transition-all duration-200 ${
                   viewMode === "grid"
-                    ? "bg-primary text-on-primary shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-on-surface-variant hover:text-on-surface"
                 }`}
                 aria-label="Grid view"
@@ -117,7 +117,7 @@ export default function ProductLists() {
                 onClick={() => setViewMode("list")}
                 className={`p-2 rounded-md transition-all duration-200 ${
                   viewMode === "list"
-                    ? "bg-primary text-on-primary shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-on-surface-variant hover:text-on-surface"
                 }`}
                 aria-label="List view"
@@ -149,7 +149,7 @@ export default function ProductLists() {
                     className="fixed inset-0 z-30"
                     onClick={() => setSortDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-40 py-1.5 animate-slide-down">
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-40 py-1.5 animate-slide-down bg-transparent backdrop-blur-md">
                     {SORT_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
@@ -157,7 +157,7 @@ export default function ProductLists() {
                           setSortBy(opt.value);
                           setSortDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        className={`cursor-pointer hover:text-accent-foreground w-full text-left px-4 py-2.5 text-sm transition-colors ${
                           sortBy === opt.value
                             ? "bg-surface-container text-on-surface font-medium"
                             : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
@@ -202,7 +202,7 @@ export default function ProductLists() {
               onClick={() => setActiveCategory(cat)}
               className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 activeCategory === cat
-                  ? "bg-primary text-on-primary shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface border border-outline-variant"
               }`}
             >
@@ -298,7 +298,7 @@ export default function ProductLists() {
               setActiveCategory("All");
               setSearchQuery("");
             }}
-            className="px-6 py-2.5 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-label-sm text-label-sm hover:opacity-90 transition-opacity"
           >
             Reset filters
           </button>
@@ -313,22 +313,22 @@ export default function ProductLists() {
           </button>
 
           <div className="flex items-center gap-1.5">
-            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on-primary font-label-sm text-sm shadow-sm">
+            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-primary-foreground font-label-sm text-sm shadow-sm">
               1
             </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low font-label-sm text-sm transition-colors duration-200">
+            <button disabled className="w-10 h-10 disabled:bg-disabled-container disabled:text-on-disabled-container flex items-center justify-center rounded-full hover:bg-surface-container-low font-label-sm text-sm transition-colors duration-200">
               2
             </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low font-label-sm text-sm transition-colors duration-200">
+            <button disabled className="w-10 h-10 disabled:bg-disabled-container disabled:text-on-disabled-container flex items-center justify-center rounded-full hover:bg-surface-container-low font-label-sm text-sm transition-colors duration-200">
               3
             </button>
             <span className="px-1.5 text-on-surface-variant text-sm">…</span>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low font-label-sm text-sm transition-colors duration-200">
+            <button disabled className="w-10 h-10 disabled:bg-disabled-container disabled:text-on-disabled-container flex items-center justify-center rounded-full hover:bg-surface-container-low font-label-sm text-sm transition-colors duration-200">
               12
             </button>
           </div>
 
-          <button className="w-11 h-11 flex items-center justify-center border border-outline-variant rounded-full hover:bg-surface-container-low transition-colors duration-200">
+          <button disabled className="w-11 h-11 disabled:bg-disabled-container disabled:text-on-disabled-container flex items-center justify-center border border-outline-variant rounded-full hover:bg-surface-container-low transition-colors duration-200">
             →
           </button>
         </div>

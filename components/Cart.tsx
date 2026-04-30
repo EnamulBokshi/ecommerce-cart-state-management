@@ -1,47 +1,326 @@
-import { useAppSelector } from "@/lib/hooks";
-import { Trash2, ShoppingCart } from "lucide-react";
+"use client";
+
+import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import {
+    removeItem,
+    updateQuantity,
+    clearCart,
+} from "@/lib/redux/features/cart.slicer";
+import {
+    ShoppingCart,
+    X,
+    Trash2,
+    Plus,
+    Minus,
+    ShoppingBag,
+    ArrowRight,
+} from "lucide-react";
 import Image from "next/image";
-import { removeItem } from "@/lib/redux/features/cart.slicer";
-import { useDispatch } from "react-redux";
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "./ui/button";
+import { useStockManager } from "@/lib/helpers/stockManager";
 
 export default function Cart() {
-  const dispatch = useDispatch();
-  const cart = useAppSelector((state) => state.cart.items);
+    const dispatch = useAppDispatch();
+    const cart = useAppSelector((state) => state.cart);
+    const [isOpen, setIsOpen] = useState(false);
+    const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const { decreaseStock, increaseStock, getStock } = useStockManager();
 
-  const handleRemoveItem = (productId: string) => {
-    dispatch(removeItem(productId));
-  };
+    // Lock body scroll when drawer is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isOpen]);
 
-  return (
-    <div>
-      {cart.length === 0 ? (
-        <div className="flex flex-col items-center justify-center">
-          <ShoppingCart className="w-24 h-24 text-muted-foreground" />
-          <p className="text-muted-foreground">Your cart is empty</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {cart.map((item) => (
-            <div
-              key={item.productId}
-              className="flex items-center gap-4"
+    // Close on Escape key
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === "Escape") setIsOpen(false);
+        },
+        []
+    );
+
+    useEffect(() => {
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [handleKeyDown]);
+
+    /** Remove item entirely — restore its full quantity back to stock */
+    function handleRemoveItem(productId: string) {
+        const item = cart.items.find((i) => i.productId === productId);
+        if (item) {
+            increaseStock(productId, item.quantity);
+        }
+        dispatch(removeItem(productId));
+    }
+
+    /** Clear all items — restore every item's quantity back to stock */
+    function handleClearCart() {
+        cart.items.forEach((item) => {
+            increaseStock(item.productId, item.quantity);
+        });
+        dispatch(clearCart());
+    }
+
+    /** Decrease quantity by 1 (restore 1 to stock) */
+    function handleDecreaseQty(productId: string, currentQty: number) {
+        increaseStock(productId);
+        dispatch(
+            updateQuantity({
+                productId,
+                quantity: currentQty - 1,
+            })
+        );
+    }
+
+    /** Increase quantity by 1 (consume 1 from stock) */
+    function handleIncreaseQty(productId: string, currentQty: number) {
+        if (decreaseStock(productId)) {
+            dispatch(
+                updateQuantity({
+                    productId,
+                    quantity: currentQty + 1,
+                })
+            );
+        }
+    }
+
+    return (
+        <>
+            {/* ── Floating cart button ── */}
+            <button
+                onClick={() => setIsOpen(true)}
+                className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-primary text-primary-foreground pl-5 pr-6 py-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 group"
+                aria-label="Open cart"
             >
-              <div className="relative w-20 h-20">
-                <Image src={item.image} alt={item.name} fill className="object-cover rounded-md" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-medium">{item.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {item.quantity} x ${item.price}
-                </p>
-              </div>
-              <button onClick={() => handleRemoveItem(item.productId)}>
-                <Trash2 className="w-5 h-5 text-muted-foreground hover:text-destructive" />
-              </button>
+                <ShoppingCart className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+                <span className="font-semibold text-sm">Cart</span>
+                {itemCount > 0 && (
+                    <span className="absolute -top-2 -right-1 min-w-[22px] h-[22px] flex items-center justify-center bg-red-500 text-white text-[11px] font-bold rounded-full px-1.5 shadow-md animate-bounce-in">
+                        {itemCount}
+                    </span>
+                )}
+            </button>
+
+            {/* ── Backdrop ── */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity animate-fade-in"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            {/* ── Slide-out drawer ── */}
+            <div
+                className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-surface-container-lowest z-[70] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                }`}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/50">
+                    <div className="flex items-center gap-3">
+                        <ShoppingBag className="w-5 h-5 text-on-surface" />
+                        <h2 className="font-semibold text-lg text-on-surface">
+                            Your Cart
+                        </h2>
+                        {itemCount > 0 && (
+                            <span className="text-xs font-medium text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full">
+                                {itemCount} {itemCount === 1 ? "item" : "items"}
+                            </span>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => setIsOpen(false)}
+                        className="p-2 rounded-full hover:bg-surface-container transition-colors"
+                        aria-label="Close cart"
+                    >
+                        <X className="w-5 h-5 text-on-surface-variant" />
+                    </button>
+                </div>
+
+                {/* Cart items */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                    {cart.items.length === 0 ? (
+                        /* ── Empty state ── */
+                        <div className="flex flex-col items-center justify-center h-full text-center py-16">
+                            <div className="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center mb-5">
+                                <ShoppingCart className="w-10 h-10 text-on-surface-variant/50" />
+                            </div>
+                            <h3 className="font-semibold text-lg text-on-surface mb-2">
+                                Your cart is empty
+                            </h3>
+                            <p className="text-sm text-on-surface-variant max-w-[260px] mb-6">
+                                Looks like you haven&apos;t added any products yet. Browse our
+                                collection and find something you love!
+                            </p>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+                            >
+                                Continue Shopping
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-4">
+                            {cart.items.map((item) => {
+                                const remainingStock = getStock(item.productId);
+                                return (
+                                    <div
+                                        key={item.productId}
+                                        className="flex gap-4 p-3 bg-surface-container-low rounded-2xl group/item hover:bg-surface-container transition-colors duration-200"
+                                    >
+                                        {/* Thumbnail */}
+                                        <div className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-surface-container">
+                                            <Image
+                                                src={item.image}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                            <div>
+                                                <h4 className="font-medium text-sm text-on-surface truncate">
+                                                    {item.name}
+                                                </h4>
+                                                <p className="text-sm font-semibold text-on-surface mt-0.5">
+                                                    ${item.price.toFixed(2)}
+                                                </p>
+                                                {/* Stock remaining indicator */}
+                                                <p className={`text-[11px] mt-0.5 ${
+                                                    remainingStock === 0
+                                                        ? "text-red-500 font-medium"
+                                                        : remainingStock <= 5
+                                                            ? "text-amber-600"
+                                                            : "text-on-surface-variant"
+                                                }`}>
+                                                    {remainingStock === 0
+                                                        ? "No more in stock"
+                                                        : `${remainingStock} left in stock`}
+                                                </p>
+                                            </div>
+
+                                            {/* Quantity controls */}
+                                            <div className="flex items-center justify-between mt-2">
+                                                <div className="flex items-center gap-0 border border-outline-variant rounded-lg overflow-hidden">
+                                                    <button
+                                                        onClick={() =>
+                                                            handleDecreaseQty(
+                                                                item.productId,
+                                                                item.quantity
+                                                            )
+                                                        }
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-surface-container transition-colors"
+                                                        aria-label="Decrease quantity"
+                                                    >
+                                                        <Minus className="w-3.5 h-3.5 text-on-surface-variant" />
+                                                    </button>
+                                                    <span className="w-9 h-8 flex items-center justify-center text-sm font-medium text-on-surface border-x border-outline-variant bg-surface-container-lowest">
+                                                        {item.quantity}
+                                                    </span>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleIncreaseQty(
+                                                                item.productId,
+                                                                item.quantity
+                                                            )
+                                                        }
+                                                        disabled={remainingStock === 0}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <Plus className="w-3.5 h-3.5 text-on-surface-variant" />
+                                                    </button>
+                                                </div>
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleRemoveItem(item.productId)
+                                                    }
+                                                    className="p-1.5 rounded-lg text-on-surface-variant hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                    aria-label="Remove item"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Line total */}
+                                        <div className="shrink-0 text-right self-center">
+                                            <p className="text-sm font-bold text-on-surface">
+                                                ${(item.price * item.quantity).toFixed(2)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Clear all */}
+                            <Button
+                                variant={'outline'}
+                                onClick={handleClearCart}
+                                className="self-end text-xs font-medium text-on-surface-variant hover:text-red-500 transition-colors mt-1 underline underline-offset-2"
+                            >
+                                Clear all items
+                            </Button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer — totals + checkout */}
+                {cart.items.length > 0 && (
+                    <div className="border-t border-outline-variant/50 px-6 py-5 bg-surface-container-low/50">
+                        {/* Subtotals */}
+                        <div className="flex flex-col gap-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-on-surface-variant">Subtotal</span>
+                                <span className="font-medium text-on-surface">
+                                    ${cart.totalPrice.toFixed(2)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-on-surface-variant">Shipping</span>
+                                <span className="font-medium text-green-600">Free</span>
+                            </div>
+                            <div className="h-px bg-outline-variant/50 my-1" />
+                            <div className="flex justify-between">
+                                <span className="font-semibold text-on-surface">Total</span>
+                                <span className="font-bold text-lg text-on-surface">
+                                    ${cart.totalPrice.toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Checkout button */}
+                        <Button
+                            variant={'default'}
+                            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-4 rounded-xl font-semibold text-sm hover:opacity-90 active:scale-[0.98] transition-all duration-200 shadow-lg"
+                        >
+                            <ShoppingBag className="w-4 h-4" />
+                            Checkout — ${cart.totalPrice.toFixed(2)}
+                        </Button>
+
+                        {/* Continue shopping */}
+                        <Button
+                            variant={'outline'}
+                            onClick={() => setIsOpen(false)}
+                            className="w-full text-center text-sm text-on-surface-variant hover:text-on-surface mt-3 py-1.5 transition-colors"
+                        >
+                            Continue Shopping
+                        </Button>
+                    </div>
+                )}
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+        </>
+    );
 }

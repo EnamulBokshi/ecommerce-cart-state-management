@@ -127,7 +127,7 @@ export const PLACEHOLDER_PRODUCTS: Product[] = [
     category: "Beverage",
     price: 19.99,
     stock: 30,
-    image: "/assets/pepsi.jpg",
+    image: "/assets/pepsi-can.jpg",
     avgRating: 4.6,
     totalReviews: 150
   },

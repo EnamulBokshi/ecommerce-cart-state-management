@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import cartSlice from "./features/cart.slicer";
-import productSlice from "./features/product.slicer";
+import productSlice, { syncStockWithCart } from "./features/product.slicer";
 import favouriteSlice from "./features/favourite.slicer";
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ function loadCartState() {
 }
 
 /** Write the current cart state to localStorage */
-function saveCartState(cartState: ReturnType<typeof cartSlice>) {
+function saveCartState(cartState: any) {
     if (typeof window === "undefined") return;
     try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartState));
@@ -42,6 +42,11 @@ export const makeStore = () => {
         },
         preloadedState: persistedCart ? { cart: persistedCart } : undefined,
     });
+
+    // Synchronize stock with persisted cart items on load
+    if (persistedCart && persistedCart.items) {
+        store.dispatch(syncStockWithCart(persistedCart.items));
+    }
 
     store.subscribe(() => {
         saveCartState(store.getState().cart);
