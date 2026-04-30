@@ -1,2 +1,2 @@
 issue 1: store re-rendaring and data leak issue as server client both render on the server so the same store could shared globally accross the server. 
-issue 2: on page refresh - previous data also get reset. to persistant user experience we used localstorage to store the latest store and then use initalized the last state after every page refresh.
+issue 2: on page refresh - previous data also get reset. to persistant user experience I shall use localstorage to store the latest store and then  initalized the last state after every page refresh.
