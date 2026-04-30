@@ -3,7 +3,6 @@ import cartSlice from "./features/cart.slicer";
 import productSlice, { syncStockWithCart } from "./features/product.slicer";
 import favouriteSlice from "./features/favourite.slicer";
 
-// ─── localStorage helpers ─────────────────────────────────────────────────────
 
 const CART_STORAGE_KEY = "cart";
 
@@ -18,14 +17,12 @@ function loadCartState() {
         return undefined;
     }
 }
-
-/** Write the current cart state to localStorage */
 function saveCartState(cartState: any) {
     if (typeof window === "undefined") return;
     try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartState));
     } catch {
-        // quota exceeded or private browsing — silently ignore
+        console.log("Localstorage limit exceeded")
     }
 }
 
